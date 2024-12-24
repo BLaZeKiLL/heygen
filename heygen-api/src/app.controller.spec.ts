@@ -6,6 +6,7 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 
 const MOCK_RESPONSE = {status: (_) => {}} as Response;
+const MOCK_UUID = '1234-1234-1234-1234';
 
 describe('AppController', () => {
   let appController: AppController;
@@ -22,12 +23,12 @@ describe('AppController', () => {
 
   describe('App', () => {
     it('should return pending', () => {
-      expect(appController.createJob()).toBe(0);
-      expect(appController.getStatus(0, MOCK_RESPONSE)).toBe('pending');
+      expect(appController.createJob(MOCK_UUID)).toBe(0);
+      expect(appController.getStatus(0, MOCK_UUID, MOCK_RESPONSE)).toBe('pending');
     });
 
     it('should return error', () => {
-      expect(appController.getStatus(100, MOCK_RESPONSE)).toBe('error');
+      expect(appController.getStatus(100, MOCK_UUID, MOCK_RESPONSE)).toBe('error');
     });
   });
 });

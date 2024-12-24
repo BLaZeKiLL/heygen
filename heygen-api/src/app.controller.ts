@@ -1,4 +1,4 @@
-import { Controller, Get, Param, Post, Res, Sse } from '@nestjs/common';
+import { Controller, Get, Param, Post, Query, Res, Sse } from '@nestjs/common';
 import { Response } from 'express';
 
 import { AppService } from './app.service';
@@ -9,20 +9,20 @@ export class AppController {
   constructor(private readonly appService: AppService) {}
 
   @Post('/create')
-  createJob(): number {
-    return this.appService.createJob();
+  createJob(@Query('uuid') uuid: string): number {
+    return this.appService.createJob(uuid);
   }
 
   @Get('/status/:id')
-  getStatus(@Param('id') id: number, @Res({ passthrough: true }) res: Response): string {
-    let status = this.appService.getStatus(id);
+  getStatus(@Param('id') id: number, @Query('uuid') uuid: string, @Res({ passthrough: true }) res: Response): string {
+    let status = this.appService.getStatus(id, uuid);
     res.status(status.code);
     return status.message;
   }
 
   @Sse('/status')
-  sseStatus(): Observable<MessageEvent> {
-    return this.appService.SseStream.pipe(map(data =>({
+  sseStatus(@Query('uuid') uuid: string): Observable<MessageEvent> {
+    return this.appService.SseStream(uuid).pipe(map(data =>({
       type: 'status',
       data: data
     } as MessageEvent)));

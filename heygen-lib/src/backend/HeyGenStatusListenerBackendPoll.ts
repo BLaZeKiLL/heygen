@@ -29,7 +29,7 @@ export class HeyGenStatusListenerBackendPoll implements IHeyGenStatusListenerBac
     public listen(id: number, callback: StatusCallback, options?: any): void {
         this.listeners.set(id, [setInterval(async () => {
             try {
-                let response = await fetch(`${this.url}/${id}`);
+                let response = await fetch(`${this.url}/${id}?${this.uuid}`);
 
                 if (response.status === 404) {
                     throw new JobNotFoundError(`Job with ID: ${id} was not found on the server`);

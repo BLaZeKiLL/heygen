@@ -20,7 +20,7 @@ export class HeyGenStatusListenerBackendSSE implements IHeyGenStatusListenerBack
         private readonly uuid: string,
         private readonly onerror: (ev: Event) => void
     ) {
-        this.source = new EventSource(this.url);
+        this.source = new EventSource(`${this.url}?${this.uuid}`);
         this.listeners = new Map();
 
         this.source.onerror = this.onerror;
