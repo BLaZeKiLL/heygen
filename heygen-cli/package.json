@@ -3,8 +3,11 @@
   "version": "1.0.0",
   "license": "MIT",
   "scripts": {
-    "preinstall": "rm -rf node_modules && cd ../heygen-lib/ && yarn build",
-    "prestart": "cd ../heygen-api && yarn build",
+    "setup:api": "cd ../heygen-api/ && yarn install",
+    "setup:lib": "cd ../heygen-lib/ && yarn install",
+    "build:api": "cd ../heygen-api/ && yarn build",
+    "build:lib": "cd ../heygen-lib/ && yarn build",
+    "preinstall": "yarn setup:api && yarn setup:lib && rm -rf node_modules && yarn build:api && yarn build:lib",
     "start": "ts-node index.ts"
   },
   "devDependencies": {
