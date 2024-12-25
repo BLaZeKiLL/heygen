@@ -50,6 +50,7 @@ const run_test = async (server: ChildProcess) => {
         const job3 = await heygen.create();
 
         // Simulate fallback
+        console.log(`\x1b[33m[heygen-cli]\x1b[0m[${new Date(Date.now()).toLocaleString()}] SIMULATING NETWORK FALLBACK, SERVER PID : ${server?.pid}`);
         heygen.changeBackend(HeyGenStatusListenerMode.POLL);
 
         jobs.push(heygen.waitForJob(job3));
