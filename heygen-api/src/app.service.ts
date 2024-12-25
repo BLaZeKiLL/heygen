@@ -14,7 +14,7 @@ export class AppService {
 
     public SseStream(uuid: string): Observable<{id: number, message: string}> {
         return this.sseStream.asObservable().pipe(
-            delay(this.getJobTime()),
+            // delay(this.getJobTime()),
             filter(x => x[1] === uuid),
             map(x => ({id: x[0], message: 'completed'})) // if the job failed pass a different message
         );
@@ -31,7 +31,7 @@ export class AppService {
     }
 
     public getStatus(id: number, uuid: string): {code: number, message: string} {
-        this.logger.log(`GET Status : ${id}, ${uuid}`);
+        this.logger.log(`GET Status : ${id}, User : ${uuid}`);
 
         if (!this.jobs.has(id)) {
             return {code: 404, message: 'error'};
@@ -49,13 +49,15 @@ export class AppService {
     }
 
     public createJob(uuid: string): number {
-        let id = this.idCount;
-
         this.idCount++;
 
-        this.jobs.set(0, [Date.now(), uuid]);
+        let id = this.idCount;
 
-        this.sseStream.next([id, uuid]);
+        this.jobs.set(id, [Date.now(), uuid]);
+
+        // Using setTimeout instead of debounce ensures, SSE is subscribed before the event
+        // could use a different source but this simulates it more realistically
+        setTimeout(() => this.sseStream.next([id, uuid]), this.getJobTime());
 
         this.logger.log(`Job : ${id}, created for user : ${uuid}`);
 

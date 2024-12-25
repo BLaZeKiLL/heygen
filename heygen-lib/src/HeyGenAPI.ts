@@ -30,20 +30,13 @@ export class HeyGenAPI {
     constructor(options: HeyGenStatusListenerOptions) {
         this.options = this.configureDefaults(options);
 
-        console.log('[heygen-lib] Options:')
-        console.log(this.options);
-
-        switch (this.options.mode) {
-            case HeyGenStatusListenerMode.SSE:
-                this.backend = this.configureBackendSSE();
-                break;
-            case HeyGenStatusListenerMode.POLL:
-                this.backend = this.configureBackendPoll();
-                break;
-            default: // This will never happen, have to add it to make ts happy
-                this.backend = undefined as any;
-                break;
+        if (this.options.logging) {
+            console.log(`[heygen-lib][${new Date(Date.now()).toLocaleString()}] Options:`)
+            console.log(this.options);
+            console.log(`[heygen-lib][${new Date(Date.now()).toLocaleString()}] Backend initialized to : ${HeyGenStatusListenerMode[this.options.mode]}`);
         }
+
+        this.backend = this.configureBackend();
     }
 
     /**
@@ -61,7 +54,13 @@ export class HeyGenAPI {
         const response = await fetch(this.getUrl('create'), {
             method: 'POST'
         });
+
         const id = Number(await response.text());
+
+        if (this.options.logging) {
+            console.log(`[heygen-lib][${new Date(Date.now()).toLocaleString()}] Job ID : ${id}, created`);
+        }
+
         return id;
     }
 
@@ -75,7 +74,7 @@ export class HeyGenAPI {
             try {
                 this.listen(id, (_, msg) => {
                     if (this.options.logging) {
-                        console.log(`[heygen-lib] Job ID : ${id}, Status : ${msg}`);
+                        console.log(`[heygen-lib][${new Date(Date.now()).toLocaleString()}] Job ID : ${id}, Status : ${msg}`);
                     }
 
                     if (msg === 'completed') {
@@ -89,6 +88,27 @@ export class HeyGenAPI {
         });
     
         return promise;
+    }
+
+    /**
+     * 
+     */
+    public changeBackend(mode: HeyGenStatusListenerMode) {
+        this.options.mode = mode === HeyGenStatusListenerMode.AUTO ? this.resolveAutoBackend() : mode;
+
+        if (this.options.logging) {
+            console.log(`[heygen-lib][${new Date(Date.now()).toLocaleString()}] Backend changed to : ${HeyGenStatusListenerMode[this.options.mode]}`);
+        }
+
+        let currentJobs = this.backend.jobs();
+
+        let fallbackBackend = this.configureBackend();
+
+        currentJobs.forEach(job => fallbackBackend.listen(job[0], job[1], this.options));
+
+        this.backend.dispose();
+
+        this.backend = fallbackBackend;
     }
 
     /**
@@ -130,6 +150,17 @@ export class HeyGenAPI {
         } as HeyGenStatusListenerOptions;
     }
 
+    private configureBackend(): IHeyGenStatusListenerBackend {
+        switch (this.options.mode) {
+            case HeyGenStatusListenerMode.SSE:
+                return this.configureBackendSSE();
+            case HeyGenStatusListenerMode.POLL:
+                return this.configureBackendPoll();
+            default: // This will never happen, have to add it to make ts happy
+                return undefined as any;
+        }
+    }
+
     /**
      * 
      * @returns 
@@ -137,7 +168,7 @@ export class HeyGenAPI {
     private configureBackendSSE(): IHeyGenStatusListenerBackend {
         let onerror = (ev: Event) => {
             if (this.options.fallback) {
-                this.handleFallback();
+                this.changeBackend(HeyGenStatusListenerMode.POLL);
             } else {
                 throw new SSEError(ev, 'Something went wrong with SSE');
             }
@@ -163,24 +194,6 @@ export class HeyGenAPI {
         );
 
         return backend;
-    }
-
-    /**
-     * 
-     */
-    private handleFallback() {
-        let currentJobs = this.backend.jobs();
-
-        let fallbackBackend = new HeyGenStatusListenerBackendPoll(
-            this.options.url,
-            this.uuid
-        );
-
-        currentJobs.forEach(job => fallbackBackend.listen(job[0], job[1]));
-
-        this.backend.dispose();
-
-        this.backend = fallbackBackend;
     }
 
     /**

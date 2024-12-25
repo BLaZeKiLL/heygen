@@ -11,8 +11,10 @@ import { HeyGenAPI, HeyGenStatusListenerMode } from 'heygen-lib';
 const START_HOOK = 'Nest application successfully started';
 const BASE_URL = 'http://localhost:3000'
 
+const sleep = (ms: number) => new Promise<void>(resolve => setTimeout(resolve, ms));
+
 const shutdown = (server: ChildProcess | undefined) => {
-    console.log(`[heygen-cli] TEST SHUTDOWN, SERVER PID : ${server?.pid}`);
+    console.log(`[heygen-cli][${new Date(Date.now()).toLocaleString()}] TEST SHUTDOWN, SERVER PID : ${server?.pid}`);
 
     setTimeout(() => {
         if (server) kill(server.pid!, 'SIGKILL');
@@ -25,12 +27,44 @@ const run_test = async (server: ChildProcess) => {
         const heygen = new HeyGenAPI({
             url: BASE_URL,
             logging: true,
-            mode: HeyGenStatusListenerMode.AUTO
+            mode: HeyGenStatusListenerMode.POLL
         });
+
+        const jobs: Promise<void>[] = [];
     
+        //JOB 1
         const job1 = await heygen.create();
-    
-        await heygen.waitForJob(job1);
+        jobs.push(heygen.waitForJob(job1));
+
+        await sleep(2000);
+
+        // JOB 2
+        const job2 = await heygen.create();
+        jobs.push(heygen.waitForJob(job2));
+
+        await sleep(2000);
+
+        // JOB 3
+        const job3 = await heygen.create();
+
+        // Simulate fallback
+        heygen.changeBackend(HeyGenStatusListenerMode.POLL);
+
+        jobs.push(heygen.waitForJob(job3));
+
+        await sleep(1000);
+
+        // JOB 4
+        const job4 = await heygen.create();
+        jobs.push(heygen.waitForJob(job4));
+
+        await sleep(1000);
+
+        // JOB 5
+        const job5 = await heygen.create();
+        jobs.push(heygen.waitForJob(job5));
+
+        await Promise.all(jobs);
         
         heygen.dispose();
     } catch (error) {
@@ -40,18 +74,25 @@ const run_test = async (server: ChildProcess) => {
     }
 }
 
-const server = spawn('node', ['../heygen-api/dist/main.js']);
+const main = () => {
+    process.env.JOB_TIME = process.env.JOB_TIME ?? '3000';
 
-server.stdout.on('data', data => {
-    const log: string = data.toString();
+    const server = spawn('node', ['../heygen-api/dist/main.js']);
 
-    console.log(`[heygen-api] ${log}`);
+    server.stdout.on('data', data => {
+        const log: string = data.toString();
 
-    if (log.includes(START_HOOK)) {
-        run_test(server);
-    }
-});
+        console.log(`[heygen-api] ${log}`);
 
-process.on('uncaughtException', function(err) {
-    shutdown(server);
-});
+        if (log.includes(START_HOOK)) {
+            run_test(server);
+        }
+    });
+
+    process.on('uncaughtException', function(err) {
+        console.error(err);
+        shutdown(server);
+    });
+}
+
+main();

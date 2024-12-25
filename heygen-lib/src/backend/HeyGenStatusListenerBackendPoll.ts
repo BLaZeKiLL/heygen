@@ -40,7 +40,7 @@ export class HeyGenStatusListenerBackendPoll implements IHeyGenStatusListenerBac
             } catch (error) {
                 throw error;
             }
-        }, options.interval ?? 1000), callback]);
+        }, options.pollInterval ?? 1000), callback]);
     }
 
     /**
