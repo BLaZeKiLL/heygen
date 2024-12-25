@@ -31,9 +31,9 @@ export class HeyGenAPI {
         this.options = this.configureDefaults(options);
 
         if (this.options.logging) {
-            console.log(`[heygen-lib][${new Date(Date.now()).toLocaleString()}] Options:`)
+            console.log(`\x1b[36m[heygen-lib]\x1b[0m[${new Date(Date.now()).toLocaleString()}] Options:`)
             console.log(this.options);
-            console.log(`[heygen-lib][${new Date(Date.now()).toLocaleString()}] Backend initialized to : ${HeyGenStatusListenerMode[this.options.mode]}`);
+            console.log(`\x1b[36m[heygen-lib]\x1b[0m[${new Date(Date.now()).toLocaleString()}] Backend initialized to : ${HeyGenStatusListenerMode[this.options.mode]}`);
         }
 
         this.backend = this.configureBackend();
@@ -58,7 +58,7 @@ export class HeyGenAPI {
         const id = Number(await response.text());
 
         if (this.options.logging) {
-            console.log(`[heygen-lib][${new Date(Date.now()).toLocaleString()}] Job ID : ${id}, created`);
+            console.log(`\x1b[36m[heygen-lib]\x1b[0m[${new Date(Date.now()).toLocaleString()}] Job ID : ${id}, created`);
         }
 
         return id;
@@ -74,7 +74,7 @@ export class HeyGenAPI {
             try {
                 this.listen(id, (_, msg) => {
                     if (this.options.logging) {
-                        console.log(`[heygen-lib][${new Date(Date.now()).toLocaleString()}] Job ID : ${id}, Status : ${msg}`);
+                        console.log(`\x1b[36m[heygen-lib]\x1b[0m[${new Date(Date.now()).toLocaleString()}] Job ID : ${id}, Status : ${msg}`);
                     }
 
                     if (msg === 'completed') {
@@ -97,7 +97,7 @@ export class HeyGenAPI {
         this.options.mode = mode === HeyGenStatusListenerMode.AUTO ? this.resolveAutoBackend() : mode;
 
         if (this.options.logging) {
-            console.log(`[heygen-lib][${new Date(Date.now()).toLocaleString()}] Backend changed to : ${HeyGenStatusListenerMode[this.options.mode]}`);
+            console.log(`\x1b[36m[heygen-lib]\x1b[0m[${new Date(Date.now()).toLocaleString()}] Backend changed to : ${HeyGenStatusListenerMode[this.options.mode]}`);
         }
 
         let currentJobs = this.backend.jobs();

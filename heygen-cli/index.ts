@@ -14,7 +14,7 @@ const BASE_URL = 'http://localhost:3000'
 const sleep = (ms: number) => new Promise<void>(resolve => setTimeout(resolve, ms));
 
 const shutdown = (server: ChildProcess | undefined) => {
-    console.log(`[heygen-cli][${new Date(Date.now()).toLocaleString()}] TEST SHUTDOWN, SERVER PID : ${server?.pid}`);
+    console.log(`\x1b[33m[heygen-cli]\x1b[0m[${new Date(Date.now()).toLocaleString()}] TEST SHUTDOWN, SERVER PID : ${server?.pid}`);
 
     setTimeout(() => {
         if (server) kill(server.pid!, 'SIGKILL');
@@ -23,11 +23,13 @@ const shutdown = (server: ChildProcess | undefined) => {
 }
 
 const run_test = async (server: ChildProcess) => {
+    console.log(`\x1b[33m[heygen-cli]\x1b[0m[${new Date(Date.now()).toLocaleString()}] TEST START, SERVER PID : ${server?.pid}`);
+
     try {
         const heygen = new HeyGenAPI({
             url: BASE_URL,
             logging: true,
-            mode: HeyGenStatusListenerMode.POLL
+            mode: HeyGenStatusListenerMode.AUTO
         });
 
         const jobs: Promise<void>[] = [];
@@ -80,9 +82,9 @@ const main = () => {
     const server = spawn('node', ['../heygen-api/dist/main.js']);
 
     server.stdout.on('data', data => {
-        const log: string = data.toString();
+        const log: string = data.toString().trim();
 
-        console.log(`[heygen-api] ${log}`);
+        console.log(`\x1b[32m[heygen-api]\x1b[0m${log}`);
 
         if (log.includes(START_HOOK)) {
             run_test(server);
