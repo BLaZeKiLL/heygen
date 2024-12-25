@@ -20,10 +20,11 @@ export class HeyGenStatusListenerBackendSSE implements IHeyGenStatusListenerBack
         private readonly uuid: string,
         private readonly onerror: (ev: Event) => void
     ) {
-        this.source = new EventSource(`${this.url}?${this.uuid}`);
+        this.source = new EventSource(this.getUrl());
         this.listeners = new Map();
 
         this.source.onerror = this.onerror;
+        // this.source.onmessage = (ev) => console.log(ev.data);
     }
 
     jobs(): [number, StatusCallback][] {
@@ -36,10 +37,11 @@ export class HeyGenStatusListenerBackendSSE implements IHeyGenStatusListenerBack
         _options?: any
     ): void {
         let cb = (ev: MessageEvent) => {
-            callback(ev.data.id, ev.data.message);
+            const data = JSON.parse(ev.data);
+            callback(data.id, data.message);
         }
 
-        this.source.addEventListener(id.toString(), cb);
+        this.source.addEventListener(this.getChannel(id.toString()), cb);
 
         this.listeners.set(id, [cb, callback]);
     }
@@ -51,7 +53,7 @@ export class HeyGenStatusListenerBackendSSE implements IHeyGenStatusListenerBack
 
         let cb : (ev: MessageEvent) => void = this.listeners.get(id)![0];
 
-        this.source.removeEventListener(id.toString(), cb);
+        this.source.removeEventListener(this.getChannel(id.toString()), cb);
 
         this.listeners.delete(id);
     }
@@ -61,5 +63,15 @@ export class HeyGenStatusListenerBackendSSE implements IHeyGenStatusListenerBack
      */
     public dispose() {
         this.source.close();
+    }
+
+    private getUrl(): URL {
+        const url = new URL(`${this.url}/status`);
+        url.searchParams.set('uuid', this.uuid);
+        return url;
+    }
+
+    private getChannel(id: string): string {
+        return `status_${id}`;
     }
 }

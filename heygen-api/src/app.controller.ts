@@ -2,7 +2,7 @@ import { Controller, Get, Param, Post, Query, Res, Sse } from '@nestjs/common';
 import { Response } from 'express';
 
 import { AppService } from './app.service';
-import { map, Observable } from 'rxjs';
+import { map, Observable, tap } from 'rxjs';
 
 @Controller()
 export class AppController {
@@ -14,8 +14,8 @@ export class AppController {
   }
 
   @Get('/status/:id')
-  getStatus(@Param('id') id: number, @Query('uuid') uuid: string, @Res({ passthrough: true }) res: Response): string {
-    let status = this.appService.getStatus(id, uuid);
+  getStatus(@Param('id') id: string, @Query('uuid') uuid: string, @Res({ passthrough: true }) res: Response): string {
+    let status = this.appService.getStatus(Number(id), uuid);
     res.status(status.code);
     return status.message;
   }
@@ -23,7 +23,7 @@ export class AppController {
   @Sse('/status')
   sseStatus(@Query('uuid') uuid: string): Observable<MessageEvent> {
     return this.appService.SseStream(uuid).pipe(map(data =>({
-      type: 'status',
+      type: `status_${data.id}`,
       data: data
     } as MessageEvent)));
   }

@@ -3,6 +3,7 @@ export interface StatusCallback {
 }
 
 export enum HeyGenStatusListenerMode {
+    AUTO,
     SSE,
     POLL
 }
@@ -12,7 +13,8 @@ export enum HeyGenStatusListenerMode {
  */
 export interface HeyGenStatusListenerOptions {
     url: string,
-    mode?: HeyGenStatusListenerMode,
+    mode: HeyGenStatusListenerMode,
+    logging?: boolean;
     fallback?: boolean;
     pollInterval?: number;
 }

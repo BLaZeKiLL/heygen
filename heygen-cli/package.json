@@ -1,10 +1,20 @@
 {
   "name": "heygen-cli",
   "version": "1.0.0",
-  "main": "index.js",
   "license": "MIT",
+  "scripts": {
+    "preinstall": "rm -rf node_modules && cd ../heygen-lib/ && yarn build",
+    "prestart": "cd ../heygen-api && yarn build",
+    "start": "ts-node index.ts"
+  },
   "devDependencies": {
+    "@types/node": "^22.10.2",
     "ts-node": "^10.9.2",
     "typescript": "^5.7.2"
+  },
+  "dependencies": {
+    "eventsource": "^3.0.2",
+    "heygen-lib": "file:../heygen-lib",
+    "tree-kill": "^1.2.2"
   }
 }

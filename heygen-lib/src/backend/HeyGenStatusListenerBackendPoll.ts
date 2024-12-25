@@ -29,13 +29,13 @@ export class HeyGenStatusListenerBackendPoll implements IHeyGenStatusListenerBac
     public listen(id: number, callback: StatusCallback, options?: any): void {
         this.listeners.set(id, [setInterval(async () => {
             try {
-                let response = await fetch(`${this.url}/${id}?${this.uuid}`);
+                let response = await fetch(this.getUrl(id));
 
                 if (response.status === 404) {
                     throw new JobNotFoundError(`Job with ID: ${id} was not found on the server`);
                 } else {
-                    let result = await response.json();
-                    callback(result.id, result.message);
+                    let result = await response.text();
+                    callback(id, result);
                 }
             } catch (error) {
                 throw error;
@@ -61,5 +61,11 @@ export class HeyGenStatusListenerBackendPoll implements IHeyGenStatusListenerBac
      */
     public dispose() {
         this.listeners.forEach((handle, _) => clearInterval(handle[0]));
+    }
+
+    private getUrl(id: number): URL {
+        const url = new URL(`${this.url}/status/${id}`);
+        url.searchParams.set('uuid', this.uuid);
+        return url;
     }
 }

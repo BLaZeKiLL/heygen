@@ -1,6 +1,6 @@
 import { Injectable, Logger } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
-import { delay, filter, map, Observable, Subject } from "rxjs";
+import { delay, filter, map, Observable, Subject, tap } from "rxjs";
 
 @Injectable()
 export class AppService {
@@ -31,6 +31,8 @@ export class AppService {
     }
 
     public getStatus(id: number, uuid: string): {code: number, message: string} {
+        this.logger.log(`GET Status : ${id}, ${uuid}`);
+
         if (!this.jobs.has(id)) {
             return {code: 404, message: 'error'};
         }
@@ -39,7 +41,7 @@ export class AppService {
             return {code: 401, message: 'unauthorized'};
         }
 
-        if (Date.now() - this.jobs.get[id][0] >= this.getJobTime()) {
+        if (Date.now() - this.jobs.get(id)[0] >= this.getJobTime()) {
             return {code: 200, message: 'completed'};
         } else {
             return {code: 200, message: 'pending'}
@@ -51,9 +53,11 @@ export class AppService {
 
         this.idCount++;
 
-        this.jobs.set(id, [Date.now(), uuid]);
+        this.jobs.set(0, [Date.now(), uuid]);
 
         this.sseStream.next([id, uuid]);
+
+        this.logger.log(`Job : ${id}, created for user : ${uuid}`);
 
         return id;
     }
