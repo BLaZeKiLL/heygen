@@ -35,19 +35,19 @@ const run_test = async (server: ChildProcess) => {
         const jobs: Promise<void>[] = [];
     
         //JOB 1
-        const job1 = await heygen.create();
+        const job1 = await heygen.createJob();
         jobs.push(heygen.waitForJob(job1));
 
         await sleep(2000);
 
         // JOB 2
-        const job2 = await heygen.create();
+        const job2 = await heygen.createJob();
         jobs.push(heygen.waitForJob(job2));
 
         await sleep(2000);
 
         // JOB 3
-        const job3 = await heygen.create();
+        const job3 = await heygen.createJob();
 
         // Simulate fallback
         console.log(`\x1b[33m[heygen-cli]\x1b[0m[${new Date(Date.now()).toLocaleString()}] SIMULATING NETWORK FALLBACK, SERVER PID : ${server?.pid}`);
@@ -58,13 +58,13 @@ const run_test = async (server: ChildProcess) => {
         await sleep(1000);
 
         // JOB 4
-        const job4 = await heygen.create();
+        const job4 = await heygen.createJob();
         jobs.push(heygen.waitForJob(job4));
 
         await sleep(1000);
 
         // JOB 5
-        const job5 = await heygen.create();
+        const job5 = await heygen.createJob();
         jobs.push(heygen.waitForJob(job5));
 
         await Promise.all(jobs);

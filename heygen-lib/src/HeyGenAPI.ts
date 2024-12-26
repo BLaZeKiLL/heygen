@@ -25,7 +25,6 @@ export class HeyGenAPI {
 
     /**
      * Constructs and configures the API interface based on the provided options
-     * @constructor
      * @param options 
      */
     constructor(options: HeyGenAPIOptions) {
@@ -51,7 +50,7 @@ export class HeyGenAPI {
      * Sends the request to the API to create a new job
      * @returns ID of the created job
      */
-    public async create(): Promise<number> {
+    public async createJob(): Promise<number> {
         const response = await fetch(this.getUrl('create'), {
             method: 'POST'
         });
