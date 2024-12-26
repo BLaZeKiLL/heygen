@@ -3,7 +3,7 @@ import { StatusCallback } from "../types/Types";
 import { IHeyGenStatusListenerBackend } from "./HeyGenStatusListenerBackend";
 
 /**
- * 
+ * Internal SSE listener
  */
 export class HeyGenStatusListenerBackendSSE implements IHeyGenStatusListenerBackend {
     private readonly source: EventSource;
@@ -24,13 +24,21 @@ export class HeyGenStatusListenerBackendSSE implements IHeyGenStatusListenerBack
         this.listeners = new Map();
 
         this.source.onerror = this.onerror;
-        // this.source.onmessage = (ev) => console.log(ev.data);
     }
 
+    /**
+     * @returns tuple array of job id's and callbacks
+     */
     jobs(): [number, StatusCallback][] {
         return Array.from(this.listeners.keys()).map(x => ([x, this.listeners.get(x)![1]]));
     }
     
+    /**
+     * Subscribe to the status of a job
+     * @param id ID of the job to listen
+     * @param callback Callback to be invoked on status messages
+     * @param options API options
+     */
     public listen(
         id: number, 
         callback: StatusCallback, 
@@ -46,6 +54,10 @@ export class HeyGenStatusListenerBackendSSE implements IHeyGenStatusListenerBack
         this.listeners.set(id, [cb, callback]);
     }
 
+    /**
+     * Stop listening for a job
+     * @param id ID of the job to stop listening
+     */
     public stop(id: number): void {
         if (!this.listeners.has(id)) {
             throw new ListenerNotFoundError(`Job with ID: ${id} is not being listened`);
@@ -59,18 +71,28 @@ export class HeyGenStatusListenerBackendSSE implements IHeyGenStatusListenerBack
     }
 
     /**
-     * 
+     * Clears all listeners
      */
     public dispose() {
         this.source.close();
     }
 
+    /**
+     * Creates the UUID injected url, used for all api calls
+     * @param route Route to invoke
+     * @returns Configured URL
+     */
     private getUrl(): URL {
         const url = new URL(`${this.url}/status`);
         url.searchParams.set('uuid', this.uuid);
         return url;
     }
 
+    /**
+     * Creates a channel string for a given job id
+     * @param id Job id for which channel if being created
+     * @returns Configured channel string
+     */
     private getChannel(id: string): string {
         return `status_${id}`;
     }

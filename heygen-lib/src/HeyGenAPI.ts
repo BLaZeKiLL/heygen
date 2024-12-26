@@ -1,33 +1,34 @@
 import { IHeyGenStatusListenerBackend } from "./backend/HeyGenStatusListenerBackend";
 import { HeyGenStatusListenerBackendPoll } from "./backend/HeyGenStatusListenerBackendPoll";
 import { HeyGenStatusListenerBackendSSE } from "./backend/HeyGenStatusListenerBackendSSE";
-import { HeyGenStatusListenerMode, HeyGenStatusListenerOptions, StatusCallback } from "./types/Types";
+import { HeyGenStatusListenerMode, HeyGenAPIOptions, StatusCallback } from "./types/Types";
 import { SSEError } from "./errors/Errors";
 
 /**
- * 
+ * Exposes functions to interact with the Heygen API
  */
 export class HeyGenAPI {
     /**
-     * 
+     * Internal instance of the status listener backend
      */
     private backend: IHeyGenStatusListenerBackend;
 
     /**
-     * 
+     * UUID to maintain authorization over jobs
      */
     private readonly uuid = crypto.randomUUID();
 
     /**
-     * 
+     * API Configuration
      */
-    private options: HeyGenStatusListenerOptions;
+    private options: HeyGenAPIOptions;
 
     /**
-     * 
+     * Constructs and configures the API interface based on the provided options
+     * @constructor
      * @param options 
      */
-    constructor(options: HeyGenStatusListenerOptions) {
+    constructor(options: HeyGenAPIOptions) {
         this.options = this.configureDefaults(options);
 
         if (this.options.logging) {
@@ -40,15 +41,15 @@ export class HeyGenAPI {
     }
 
     /**
-     * 
+     * Updates the polling interval for the POLL backend
      */
     public set pollInterval(value: number) {
         this.options.pollInterval = value;
     }
 
     /**
-     * 
-     * @returns 
+     * Sends the request to the API to create a new job
+     * @returns ID of the created job
      */
     public async create(): Promise<number> {
         const response = await fetch(this.getUrl('create'), {
@@ -65,9 +66,10 @@ export class HeyGenAPI {
     }
 
     /**
-     * 
-     * @param id 
-     * @returns 
+     * Utility method that wraps the StatusCallback in a promise that resolves when
+     * the job is completed
+     * @param id ID of the job to wait for
+     * @returns Promise of job completion
      */
     public waitForJob(id: number): Promise<void> {
         const promise = new Promise<void>((resolve, reject) => {
@@ -91,7 +93,7 @@ export class HeyGenAPI {
     }
 
     /**
-     * 
+     * Switches backend and transfer's the active listeners
      */
     public changeBackend(mode: HeyGenStatusListenerMode) {
         this.options.mode = mode === HeyGenStatusListenerMode.AUTO ? this.resolveAutoBackend() : mode;
@@ -112,44 +114,48 @@ export class HeyGenAPI {
     }
 
     /**
-     * 
-     * @param id 
-     * @param callback 
+     * Subscribe to the status of a job
+     * @param id ID of the job to listen
+     * @param callback Callback to be invoked on status messages
      */
     public listen(id: number, callback: StatusCallback): void {
         this.backend.listen(id, callback, this.options);
     }
 
     /**
-     * 
-     * @param id 
+     * Stop listening for a job
+     * @param id ID of the job to stop listening
      */
     public stop(id: number): void {
         this.backend.stop(id);
     }
 
     /**
-     * 
+     * Clears all listeners
      */
     public dispose(): void {
         this.backend.dispose();
     }
 
     /**
-     * 
-     * @param options 
-     * @returns 
+     * Configures defaults for options not provided
+     * @param options User provided options
+     * @returns Configured options
      */
-    private configureDefaults(options: HeyGenStatusListenerOptions): HeyGenStatusListenerOptions {
+    private configureDefaults(options: HeyGenAPIOptions): HeyGenAPIOptions {
         return {
             url: options.url,
             mode: options.mode === HeyGenStatusListenerMode.AUTO ? this.resolveAutoBackend() : options.mode,
             logging: options.logging ?? false,
             fallback: options.fallback ?? false,
             pollInterval: options.pollInterval ?? 1000
-        } as HeyGenStatusListenerOptions;
+        } as HeyGenAPIOptions;
     }
 
+    /**
+     * Configures a backend based on the mode
+     * @returns Configured backend
+     */
     private configureBackend(): IHeyGenStatusListenerBackend {
         switch (this.options.mode) {
             case HeyGenStatusListenerMode.SSE:
@@ -162,8 +168,8 @@ export class HeyGenAPI {
     }
 
     /**
-     * 
-     * @returns 
+     * Configures the SSE backend
+     * @returns SSE backend
      */
     private configureBackendSSE(): IHeyGenStatusListenerBackend {
         let onerror = (ev: Event) => {
@@ -184,8 +190,8 @@ export class HeyGenAPI {
     }
 
     /**
-     * 
-     * @returns 
+     * Configures the POLL backend
+     * @returns POLL backend
      */
     private configureBackendPoll(): IHeyGenStatusListenerBackend {
         let backend = new HeyGenStatusListenerBackendPoll(
@@ -197,9 +203,9 @@ export class HeyGenAPI {
     }
 
     /**
-     * 
-     * @param route 
-     * @returns 
+     * Creates the UUID injected url, used for all api calls
+     * @param route Route to invoke
+     * @returns Configured URL
      */
     private getUrl(route: string): URL {
         const url = new URL(`${this.options.url}/${route}`);
@@ -208,8 +214,8 @@ export class HeyGenAPI {
     }
 
     /**
-     * 
-     * @returns 
+     * Resolves the AUTO backend based on platform and capability
+     * @returns Resolved backend SEE or POLL
      */
     private resolveAutoBackend(): HeyGenStatusListenerMode {
         if (![typeof window, typeof document].includes('undefined')) { // Browsers
