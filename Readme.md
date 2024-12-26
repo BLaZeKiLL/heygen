@@ -91,9 +91,9 @@ Github actions are setup to run the integration test, providing a zero-config wa
 #### Steps
 - Head over to the [action page](https://github.com/BLaZeKiLL/heygen/actions/workflows/ci.yml), make sure you are on the `Heygen Integration Test` action
 - Click on `Run Workflow` at the top right, you can change the time it takes for the `heygen-api` to complete a job here, it defaults to 3000
-- Refresh the page if required to see the workflow scheduled, and you can go check the logs of the `main` job.
+- Refresh the page if required to see the workflow scheduled, and you can go check the logs of the `main` job, under the `Run yarn start` section.
 
-Here are the [logs](https://github.com/BLaZeKiLL/heygen/actions/runs/12498126508/job/34871539132) of a previous run for an example.
+Here are the [logs](https://github.com/BLaZeKiLL/heygen/actions/runs/12498126508/job/34871539132) of a previous run for an example, expand the `Run yarn start` section.
 
 ### Docker
 For convenience docker images are built using Github Actions and hosted using Github Container Registry, these can be pulled using the following commands depending on your OS Arch.
