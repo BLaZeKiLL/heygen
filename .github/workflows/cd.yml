@@ -63,8 +63,5 @@ jobs:
           context: .
           push: true
           tags: ${{ steps.meta.outputs.tags }}-${{ matrix.architecture }}
-          labels: ${{ steps.meta.outputs.labels }}
+          labels: ${{ steps.meta.outputs.labels }}-${{ matrix.architecture }}
           platforms: linux/${{ matrix.architecture }}
-          build-args: |
-            VERSION=${{ steps.version.outputs.result }}
-            DATABASE_URL=${{ secrets.BOOPER_DEV_DATABASE }}
