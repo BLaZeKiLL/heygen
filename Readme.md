@@ -1,7 +1,7 @@
 # Mock HeyGen Lib
 Mock Heygen client lib to fetch status of running jobs, be sure to read till the end especially the [Library Design](#library-design) part.
 
->Full documentation with API documentation is hosted [here]()
+>Full documentation with API documentation is hosted [here](https://blazekill.github.io/heygen/)
 
 ## Project Structure
 - `heygen-api` : NestJS backend simulating long running jobs basked on the `JOB_TIME` env variable. exposes the following endpoints
